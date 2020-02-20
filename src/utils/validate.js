@@ -44,3 +44,12 @@ export function isvalidPhone(str) {
   const reg = /^1[3|4|5|7|8][0-9]\d{8}$/
   return reg.test(str)
 }
+
+// 正浮点数验证
+export function isvalidFP(str) {
+  debugger
+  const reg = /^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$/
+  return reg.test(str)
+}
+
+

@@ -5,7 +5,7 @@
       <div id="register">
         <div class="header">
           <img src="/favicon.ico">
-          <p class="title">Pre系统平台注册</p>
+          <p class="title">MB快充水电平台注册</p>
         </div>
         <el-form
           ref="ruleForm2"

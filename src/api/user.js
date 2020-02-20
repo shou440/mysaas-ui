@@ -103,3 +103,13 @@ export function registerUser(data) {
   })
 }
 
+// 用户扫码后通过功能码+uuid的方式获取用户信息
+export function getwxuserinfobyuuid(uuidparam) {
+  return request({
+    url: '/user/getwxuserinfobyuuid',
+    method: 'post',
+    params: uuidparam
+  })
+  }
+  
+  

@@ -22,6 +22,7 @@ import { Navbar, Sidebar, AppMain, TagsView, Settings } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 import { mapState } from 'vuex'
 
+
 export default {
   name: 'Layout',
   components: {
@@ -33,6 +34,7 @@ export default {
     TagsView
   },
   mixins: [ResizeMixin],
+ 
   computed: {
     sidebar() {
       return this.$store.state.app.sidebar
@@ -58,6 +60,8 @@ export default {
       }
     }
   },
+
+ 
   methods: {
     handleClickOutside() {
       this.$store.dispatch('closeSideBar', { withoutAnimation: false })

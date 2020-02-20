@@ -23,8 +23,8 @@ export default {
     }
   },
   data() {
-    return {
-      title: 'Pre权限管理系统',
+    return { 
+      title: 'MB快充水电云平台',
       logo: 'https://gitee.com/li_haodong/picture_management/raw/master/pic/WechatIMG9.png'
     }
   }

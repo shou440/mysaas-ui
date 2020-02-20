@@ -147,7 +147,7 @@
                 inactive-color="#ff4949"
                 active-text="正常"
                 active-value="0"
-                inactive-text="锁定"
+                inactive-text="锁定"  
                 inactive-value="9"
               />
             </el-form-item>
@@ -393,7 +393,7 @@ export default {
       this.dataForm.roleList = userRoles
 
       console.log(this.dataForm)
-      debugger
+      
       if (!this.operation) {
         // 编辑用户
         editUser(this.dataForm).then(response => {

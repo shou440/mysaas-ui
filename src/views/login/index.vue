@@ -8,7 +8,7 @@
     <div class="login-right">
       <div class="title-container">
         <h3 class="title">
-          PRE 权限后台系统登录
+          MB快充水电云平台
         </h3>
       </div>
       <el-tabs v-model="activeName" @tab-click="handleClick">
@@ -289,6 +289,7 @@ export default {
     }
   },
   created() {
+    debugger
     this.refreshCaptcha()
     this.socialLogin()
   },
@@ -409,7 +410,9 @@ export default {
     handleSocial(path) {
       this.currentPath = path
       this.socialLoading = true
-      window.location.href = 'http://localhost:8081/auth/' + path
+      //window.location.href = 'http://localhost:8081/auth/' + path
+      window.location.href = 'http://211.149.169.214:8081/auth/' + path
+  
     },
     gotoRegister() {
       this.$router.push({

@@ -19,6 +19,10 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/myweixin',
+    component: () => import('@/views/myweixin/index'),
+  },
+  {
     path: '/register',
     component: () => import('@/views/login/register'),
     hidden: true

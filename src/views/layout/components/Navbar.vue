@@ -8,7 +8,21 @@
         <!--        <search id="header-search" class="right-menu-item" />-->
 
         <!--        <error-log class="errLog-container right-menu-item hover-effect" />-->
-
+        <div class="right-menu-item">
+           <div> 园区选择:</div>
+        </div>
+         <div class="right-menu-item">
+           <div>
+             <el-select v-model="selArea" placeholder="请选择园区">
+                <el-option
+                  v-for="item in this.areas"
+                  :key="item.area_id"
+                  :label="item.area_name"
+                  :value="item.area_id">
+                </el-option>
+              </el-select>
+           </div>
+        </div>
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
 
       </template>
@@ -47,12 +61,23 @@ import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import Screenfull from '@/components/Screenfull'
+import { Loading } from 'element-ui';
+let loading;
 
 export default {
   components: {
     Breadcrumb,
     Hamburger,
     Screenfull
+  },
+  
+  data() {
+   
+   return{
+      areas:new Array(),
+      selArea:0
+   }
+    
   },
   computed: {
     ...mapGetters([
@@ -62,7 +87,43 @@ export default {
       'device'
     ])
   },
+   //创建时装载园区数据
+  mounted(){   
+
+    var _this = this
+　　this.startLoading()                     //显示装载等待
+ 
+    this.$nextTick(function () {
+      _this.$store.dispatch('GetTalentAreaList').then(() => {
+
+        
+                _this.areas = _this.$store.state.area.areas
+                if (null != _this.areas)      //如果有园区则选择默认园区
+                {
+                    _this.selArea = _this.areas[0].area_id
+
+                    _this.$store.commit('SET_CUR_AREA', _this.areas[0])
+                    
+                }
+
+                this.$forceUpdate()
+                loading.close()
+
+              }).catch((ex)=>{
+                debugger
+                loading.close()
+              })
+    })
+    },
   methods: {
+    
+     startLoading() {
+       loading = Loading.service({
+      lock: true,
+      text: '加载园区数据……',
+      background: 'rgba(0, 0, 0, 0.7)'
+      })
+    },
     setting() {
       this.$store.commit('openSettingBar', true)
     },
@@ -111,7 +172,7 @@ export default {
       display: inline-block;
       vertical-align: top;
     }
-
+    
     .right-menu {
       float: right;
       height: 100%;

@@ -236,6 +236,7 @@ export default {
     // 加载用户个人信息
     findUserInfo: function() {
       getUserInfo().then((res) => {
+         
         this.user = res.data.data
       })
     },

@@ -1,6 +1,7 @@
 import { loginByUsername, logout, getUserInfo, loginByUserPhone } from '@/api/login'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { removeTenant } from '@/utils/tenant'
+import { getWXUserInfo } from '@/api/myweixin'
 
 const user = {
   state: {
@@ -11,7 +12,9 @@ const user = {
     name: '',
     avatar: '',
     introduction: '',
+    currentarea:'',     //当前园区
     roles: [],
+    areas:[],           //用户有权限的园区
     setting: {
       articlePlatform: []
     }
@@ -38,6 +41,12 @@ const user = {
     },
     SET_ROLES: (state, roles) => {
       state.roles = roles
+    },
+    SET_AREA: (state, areas) => {
+      state.areas = areas
+    },
+    SET_AREA: (state, areas) => {
+      state.areas = areas
     }
   },
 
@@ -91,6 +100,20 @@ const user = {
           // 头像
           commit('SET_AVATAR', data.avatar)
           resolve(response)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+
+     //通过Code获取微信用户信息
+     FetchWXUserInfoByCode({ commit },codeParam) {
+
+      
+      return new Promise((resolve, reject) => {
+        getWXUserInfo(codeParam).then(response => {
+          const data = response.data.data
+          resolve(data)
         }).catch(error => {
           reject(error)
         })

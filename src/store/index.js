@@ -5,6 +5,10 @@ import errorLog from './modules/errorLog'
 import permission from './modules/permission'
 import tagsView from './modules/tagsView'
 import user from './modules/user'
+import area from './modules/area'
+import room from './modules/room'
+import meter from './modules/meter'
+import wmeter from './modules/wmeter'
 import setting from './modules/setting'
 import getters from './getters'
 
@@ -17,7 +21,11 @@ const store = new Vuex.Store({
     permission,
     tagsView,
     user,
-    setting
+    setting,
+    area,
+    room,
+    meter,
+    wmeter
   },
   getters
 })

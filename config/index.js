@@ -7,14 +7,15 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      '/pre': {
+      '/pre': { 
         target: 'http://localhost:8081',//后端接口地址
+      //  target: 'http://211.149.169.214:8081',//后端接口地址
         changeOrigin: true,  //是否跨域
         pathRewrite: {
           '^/pre': '/',//重写,
         }
       }
-
+  
     },
 
     // 本地开发使用
@@ -28,8 +29,9 @@ module.exports = {
     showEslintErrorsInOverlay: false,
     devtool: 'cheap-source-map',
     cssSourceMap: false
+   
   },
-
+  
   build: {
     index: path.resolve(__dirname, '../dist/index.html'),
     assetsRoot: path.resolve(__dirname, '../dist'),
