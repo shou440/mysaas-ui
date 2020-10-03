@@ -1,0 +1,1 @@
+2020-8-2 如果要mxGraph支持自定义图形，则需要注册mxBasicShap，在utils/mxBasic.js文件中(该文件取自drawio中的shap的basicshape
