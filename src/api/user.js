@@ -110,6 +110,33 @@ export function getwxuserinfobyuuid(uuidparam) {
     method: 'post',
     params: uuidparam
   })
-  }
-  
-  
+}
+
+// 通过openid获取用户微信详细信息
+export function getWXUserInfoByOpenid(userfilter) {
+  return request({
+    url: '/room/getwxuserdetail',
+    method: 'post',
+    params: userfilter
+  })
+}
+
+// 获取用户的结算信息
+export function getUserPromotionCount() {
+  return request({
+    url: '/user/getpromotioncount',
+    method: 'post',
+    params: ''
+  })
+}
+
+// 更新业主结算信息
+export function updatePromotionCount(usercount) {
+  debugger
+  return request({
+    url: '/user/updatepromotioncount',
+    method: 'post',
+    params: usercount
+  })
+}
+

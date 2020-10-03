@@ -140,6 +140,61 @@
                 </el-form>
               </div>
             </el-tab-pane>
+            <el-tab-pane label="结算方式" name="forth">
+
+              <div style="width: 500px">
+                <el-form ref="mailForm" :model="mailForm" label-width="100px" class="demo-ruleForm">
+                  <el-form-item
+                    label="结算账号"
+                  >
+                    <el-radio v-model="usercount.count_type" :label="1">个人微信</el-radio>
+                    <el-radio v-model="usercount.count_type" :label="2">商户账号</el-radio>
+                    <el-radio v-model="usercount.count_type" :label="3">合同结算</el-radio>
+                  </el-form-item>
+
+                  <el-form-item
+                    v-if="usercount.count_type===1"
+                    label="微信账号"
+                  >
+                    <el-row>
+                      <el-col :span="8">
+                        <el-avatar shape="circle" :src="usercount.headimgurl" :size="40" />
+                      </el-col>
+                      <el-col :span="8">
+                        {{ usercount.nickname }}
+                      </el-col>
+                      <el-col justify="end" align="middle" :span="8" type="flex">
+                        <el-popover
+                          v-model="QSvisible"
+                          placement="left"
+                          width="160"
+                          @show="showQCtrl"
+                          @hide="hideQCtrl"
+                        >
+                          <div ref="qrCodeDiv" />
+                          <div style="color:#FF0000">
+                            请租户扫码绑定
+                          </div>
+                          <el-button slot="reference">绑定微信</el-button>
+                        </el-popover>
+                      </el-col>
+                    </el-row>
+                  </el-form-item>
+                  <el-form-item
+                    v-if="usercount.count_type===2"
+                    label="商户账号"
+                    prop="usercount.user_count"
+                    :rules="[{ required: true, message: '商户账号不能为空'}]"
+                  >
+                    <el-input v-model="usercount.user_count" autocomplete="off" />
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button type="primary" @click="updateUserCount()">提交</el-button>
+
+                  </el-form-item>
+                </el-form>
+              </div>
+            </el-tab-pane>
           </el-tabs>
         </el-card>
       </el-col>
@@ -151,6 +206,11 @@
 <script>
 import PanThumb from '@/components/PanThumb'
 import { getUserInfo, updatePass, resetEmail, updateEmail } from '@/api/user'
+import QRCode from 'qrcodejs2'
+import { SecToDateTime, PrefixInteger, GetServerURL, time2BeijingTime, uuidGenerator, timestam_2_str, timestam_2_shortstr, conversqltimestr_2_time } from '@/api/common'
+import { getwxuserinfobyuuid } from '@/api/user'
+import { Loading } from 'element-ui'
+let loading
 
 export default {
   name: 'Index',
@@ -185,6 +245,14 @@ export default {
         jobName: '',
         createTime: ''
       },
+      usercount:
+      {
+        count_type: 1,
+        user_count: '',
+        nickname: '',
+        headimgurl: '',
+        openid: ''
+      },
       activeName: 'first',
       passForm: {
         oldPass: '',
@@ -212,7 +280,10 @@ export default {
         { img: 'qq.png', name: 'qq', bind: false, radius: false },
         { img: 'dingtalk.png', name: 'dingtalk', bind: false, radius: true },
         { img: 'microsoft.png', name: 'microsoft', bind: false, radius: false }
-      ]
+      ],
+      QSvisible: false, // 绑定微信扫码
+      isShowQCtrl: false,
+      isNeedFetchUserinfo: false
     }
   },
   computed: {
@@ -230,14 +301,42 @@ export default {
     //   return regEmail(mail)
     // },
 
+    startLoading(title) {
+      loading = Loading.service({
+        lock: true,
+        text: title,
+        background: 'rgba(0, 0, 0, 0.7)'
+      })
+    },
     resolveLogo(logo) {
       return require(`@/assets/logo/${logo}`)
     },
+
+    // 下载结算账户
+    loadUserCount() {
+      var _this = this
+      _this.$store.dispatch('LoadUserPromotionCount').then((promotion) => {
+        debugger
+        _this.usercount.count_type = promotion.count_type
+        _this.usercount.user_count = promotion.user_count
+
+        // 如果是微信则获取用户微信信息,昵称、头像、openid
+        if (_this.usercount.count_type == 1) {
+          _this.fetchuserWXInfo()
+        }
+      }).catch((ex) => {
+
+      })
+    },
     // 加载用户个人信息
     findUserInfo: function() {
+      debugger
+      var _this = this
+
       getUserInfo().then((res) => {
-         
         this.user = res.data.data
+
+        _this.loadUserCount()
       })
     },
 
@@ -373,9 +472,6 @@ export default {
         this.$refs[formName].resetFields()
       }
     },
-    handleClick(tab, event) {
-      console.log(tab, event)
-    },
 
     // handleAvatarSuccess(res, file) {
     //   // this.imageUrl = URL.createObjectURL(file.raw)
@@ -410,6 +506,145 @@ export default {
         this.$message.error('上传头像图片大小不能超过 2MB!')
       }
       return isJPG && isLt2M
+    },
+    showQCtrl() {
+      var _this = this
+      this.isShowQCtrl = true
+      this.uuid = uuidGenerator()
+
+      // 判断是否需要创建二维码
+      if (_this.$refs.qrCodeDiv != null) {
+        _this.$refs.qrCodeDiv.innerHTML = ''
+
+        if (_this.Qcodectrl != null) {
+          _this.Qcodectrl.clear()
+        }
+
+        _this.Qcodectrl = new QRCode(_this.$refs.qrCodeDiv, {
+          text: GetServerURL() + '/myweixin?fun=fu&param=' + _this.uuid,
+          width: 200,
+          height: 200,
+          colorDark: '#333333', // 二维码颜色
+          colorLight: '#ffffff', // 二维码背景色
+          correctLevel: QRCode.CorrectLevel.L// 容错率，L/M/H
+        })
+
+        _this.isNeedFetchUserinfo = true
+        _this.queryRegiste()
+      }
+    },
+    // 定时访问服务器，请求绑定的用户信息
+    queryRegiste() {
+      var _this = this
+      var paramfilter = { param: _this.uuid, code: '' }
+
+      if (!_this.isNeedFetchUserinfo) {
+        return
+      }
+
+      new Promise(() => {
+        getwxuserinfobyuuid(paramfilter).then(response => {
+          if (response.data != null && response.data.data != null) {
+            var userinfo = JSON.parse(response.data.data)
+            _this.usercount.headimgurl = userinfo.headimgurl
+            _this.usercount.openid = userinfo.openid
+            _this.usercount.user_count = userinfo.openid
+            _this.usercount.nickname = userinfo.nickname
+            _this.isNeedFetchUserinfo = false
+
+            // 完后后隐藏二维码
+            _this.QSvisible = false
+            return
+          }
+          setTimeout(() => {
+            _this.queryRegiste()
+          }, 1000)
+        }).catch(error => {
+          setTimeout(() => {
+            _this.queryRegiste()
+          }, 1000)
+        })
+      })
+    },
+
+    // 提取业主微信信息
+    fetchuserWXInfo() {
+      var _this = this
+      var userparam = { code: _this.usercount.user_count, openid: _this.usercount.user_count, param: '' }
+
+      if (_this.usercount.user_count != null && _this.usercount.user_count != '') {
+        _this.startLoading('获取业主微信信息')
+      } else {
+        return
+      }
+
+      _this.$store.dispatch('FetchWXUserInfoByOpenid', userparam).then((data) => {
+        loading.close()
+        _this.isNeedFetchUserinfo = false
+        if (data == null) {
+          _this.$message({
+            type: 'error',
+            message: '获取业主微信信息失败!'
+          })
+
+          return
+        } else if (data.subscribe == '0') {
+          _this.$message({
+            type: 'error',
+            message: '业主未关注公众号，获取信息失败!'
+          })
+        } else {
+          _this.usercount.headimgurl = data.headimgurl
+          _this.usercount.openid = data.openid
+          _this.usercount.user_count = data.openid
+          _this.usercount.nickname = data.nickname
+        }
+      }).catch((ex) => {
+        loading.close()
+        var ddd = 0
+      })
+    },
+    hideQCtrl() {
+      this.isShowQCtrl = false
+      this.QSvisible = false
+      this.isNeedFetchUserinfo = false
+    },
+    handleClick(tab, event) {
+      if (tab.name == 'second') {
+        // this.loadMeter()
+      } else if (tab.name == 'third') {
+        //   this.loadWMeter()
+      } else if (tab.name == 'forth') {
+        this.fetchuserWXInfo() // 下载用户微信信息
+      }
+    },
+    // 更新业主结算账户
+    updateUserCount() {
+      var _this = this
+
+      var usercountItem = { user_id: 0,
+        count_type: _this.usercount.count_type,
+        user_count: _this.usercount.user_count }
+
+      _this.startLoading('更新业主结算账号')
+      _this.$store.dispatch('UpdatePromotionCount', usercountItem).then((data) => {
+        loading.close()
+        _this.isNeedFetchUserinfo = false
+        if (data == null) {
+          _this.$message({
+            type: 'error',
+            message: '更新业主账号失败!'
+          })
+        } else {
+          _this.$message({
+            type: 'error',
+            message: '更新业主账号成功!'
+          })
+        }
+      }).catch((ex) => {
+        loading.close()
+        var ddd = 0
+      })
     }
   }
 }

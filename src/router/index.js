@@ -20,7 +20,27 @@ export const constantRoutes = [
   },
   {
     path: '/myweixin',
-    component: () => import('@/views/myweixin/index'),
+    component: () => import('@/views/myweixin/index')
+
+  },
+  {
+    path: '/mytenant',
+    component: () => import('@/views/mytenant/index'),
+    children: [
+      { path: '/', component: resolve => require(['@/views/mytenant/index'], resolve) },
+      { path: '/mytenant/fee', component: resolve => require(['@/views/mytenant/tenantfee'], resolve) },
+      { path: '/mytenant/charge', component: resolve => require(['@/views/mytenant/charge'], resolve) },
+      { path: '/mytenant/payment', component: resolve => require(['@/views/mytenant/payment'], resolve) },
+      { path: '/mytenant/realgraph', component: resolve => require(['@/views/mytenant/realgraph'], resolve) }
+    ]
+  },
+  {
+    path: '/regpremeter',
+    component: () => import('@/views/premeter/regpremeter')
+  },
+  {
+    path: '/premetercharge',
+    component: () => import('@/views/premeter/premetercharge')
   },
   {
     path: '/register',
@@ -64,7 +84,7 @@ export const constantRoutes = [
     path: '/user',
     component: Layout,
     hidden: true,
-    redirect: 'noredirect',
+    redirect: 'user/center',
     children: [
       {
         path: 'center',

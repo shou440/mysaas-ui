@@ -2,6 +2,7 @@ import { loginByUsername, logout, getUserInfo, loginByUserPhone } from '@/api/lo
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { removeTenant } from '@/utils/tenant'
 import { getWXUserInfo } from '@/api/myweixin'
+import { getWXUserInfoByOpenid, getUserPromotionCount, updatePromotionCount } from '@/api/user'
 
 const user = {
   state: {
@@ -12,9 +13,12 @@ const user = {
     name: '',
     avatar: '',
     introduction: '',
-    currentarea:'',     //当前园区
+    currentarea: '', // 当前园区
     roles: [],
-    areas:[],           //用户有权限的园区
+    areas: [], // 用户有权限的园区
+    prewxuser: null, // 预付费微信用户
+    tlwxuser: null, // 租户的微信登录信息
+    promotioncount: null,
     setting: {
       articlePlatform: []
     }
@@ -47,6 +51,12 @@ const user = {
     },
     SET_AREA: (state, areas) => {
       state.areas = areas
+    },
+    SET_PREWXUSER: (state, prewxuser) => {
+      state.prewxuser = prewxuser
+    },
+    SET_PROMOTION_COUNT: (state, promotioncount1) => {
+      state.promotioncount = promotioncount1
     }
   },
 
@@ -87,6 +97,7 @@ const user = {
           // 由于mockjs 不支持自定义状态码只能这样hack
           // if (!response.data) {
           //   reject('Verification failed, please login again.')
+
           // }
           const data = response.data.data
           if (data.roles && data.roles.length > 0) { // 验证返回的roles是否是一个非空数组
@@ -106,12 +117,48 @@ const user = {
       })
     },
 
-     //通过Code获取微信用户信息
-     FetchWXUserInfoByCode({ commit },codeParam) {
-
-      
+    // 通过Code获取微信用户信息
+    FetchWXUserInfoByCode({ commit }, codeParam) {
       return new Promise((resolve, reject) => {
         getWXUserInfo(codeParam).then(response => {
+          const data = response.data.data
+          resolve(data)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+
+    // 通过Code获取微信用户信息
+    FetchWXUserInfoByOpenid({ commit }, userFilter) {
+      return new Promise((resolve, reject) => {
+        getWXUserInfoByOpenid(userFilter).then(response => {
+          const data = response.data.data
+          resolve(data)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+
+    // 下载业主结算账户信息
+    LoadUserPromotionCount({ commit }) {
+      return new Promise((resolve, reject) => {
+        getUserPromotionCount().then(response => {
+          const data = response.data.data
+          commit('SET_PROMOTION_COUNT', data)
+          resolve(data)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+
+    // 下载业主结算账户信息
+    UpdatePromotionCount({ commit }, usercount) {
+      debugger
+      return new Promise((resolve, reject) => {
+        updatePromotionCount(usercount).then(response => {
           const data = response.data.data
           resolve(data)
         }).catch(error => {

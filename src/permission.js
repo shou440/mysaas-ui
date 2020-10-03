@@ -7,10 +7,12 @@ import { getToken } from '@/utils/auth'
 
 NProgress.configure({ showSpinner: false })
 
-const whiteList = ['/login', '/auth-redirect', '/bind', '/register', '/myweixin', '/wxcallback','/login1']
+const whiteList = ['/login',
+  '/auth-redirect', '/bind', '/register', '/myweixin',
+  '/regpremeter', '/premetercharge', '/wxcallback', '/login1',
+  '/mytenant', '/mytenant/fee', '/mytenant/payment', '/mytenant/charge', '/mytenant/realgraph']
 
 router.beforeEach((to, from, next) => {
-    
   NProgress.start()
   if (getToken()) {
     /* has token*/
@@ -49,8 +51,6 @@ router.beforeEach((to, from, next) => {
   } else {
     // 没有token
     if (whiteList.indexOf(to.path) !== -1) {
-
-      debugger
       // 在免登录白名单，直接进入
       next()
     } else {

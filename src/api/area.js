@@ -7,12 +7,12 @@ export function addArea(data) {
     method: 'post',
     data: data
   })
-}  
+}
 
 // 获取业主园区列表
-export function getTalentAreaList() {
+export function getTenantAreaList() {
   return request({
-    url: '/area/gettalentareas',
+    url: '/area/gettenantareas',
     method: 'get',
     params: ''
   })

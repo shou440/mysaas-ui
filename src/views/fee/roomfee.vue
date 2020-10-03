@@ -1,147 +1,137 @@
 <template>
   <div class="app-container">
     <el-row :gutter="10">
-      <el-col :xs="24" :sm="12">
-        <el-card class="user-center">
-          <div slot="header" class="clearfix">
-            <span>关于我</span>
-          </div>
-          <div class="user-profile">
-            <div class="box-center">
-              <pan-thumb :image="avatar" :height="'100px'" :width="'100px'" :hoverable="false">
-                <el-link type="primary" class="change-avatar" @click="dialogVisible = true">更换头像</el-link>
-              </pan-thumb>
-            </div>
-            <div class="box-center">
-              <div class="user-name text-center">{{ user.username }}</div>
-              <div class="user-role text-center text-muted">
-                <span>{{ user.deptName ? user.deptName : '没有' }}</span> · <span>{{ user.roleName ? user.roleName : '没有' }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="user-bio">
-            <div class="user-education user-bio-section">
-              <div class="user-bio-section-header"><el-icon class="el-icon-connection" /><span>第三方账号</span></div>
-              <div class="user-bio-section-body">
-                <div class="text-muted">
-                  <template v-for="(l, index) in logo">
-                    <div :key="index" class="logo-wrapper">
-                      <img v-if="l.bind" :src="resolveLogo(l.img)" :class="{ 'radius': l.radius }" alt="" title="1" @click="unbind(l.name)">
-                      <img v-else :src="resolveLogo(l.img)" :class="{ 'radius': l.radius }" alt="" title="2" class="unbind" @click="bind(l.name)">
-                    </div>
-                  </template>
-                </div>
-              </div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12">
-        <el-card class="user-center">
-          <el-tabs v-model="activeName" @tab-click="handleClick">
-            <el-tab-pane label="房间费用" name="first">
-              <div class="user" style="width: 600px">
-                <el-form ref="form" :model="user" label-width="80px">
+      <el-col>
 
-                  <el-form-item label="用户名">
-                    <el-input v-model="user.username" />
-                  </el-form-item>
-                  <el-form-item label="头像">
-                    <el-upload
-                      class="avatar-uploader"
-                      action="https://jsonplaceholder.typicode.com/posts/"
-                      :show-file-list="false"
-                      :before-upload="beforeAvatarUpload"
-                    >
-                      <img v-if="user.avatar" :src="user.avatar" class="avatar" alt="">
-                      <i v-else class="el-icon-plus avatar-uploader-icon" />
-                    </el-upload>
-                  </el-form-item>
-                  <el-form-item label="手机号">
-                    <el-input v-model="user.phone" />
-                  </el-form-item>
-                  <el-form-item label="用户邮箱">
-                    <el-input v-model="user.email" :disabled="true" />
-                  </el-form-item>
-                  <el-form-item label="所属部门">
-                    <el-input v-model="user.deptName" :disabled="true" />
-                  </el-form-item>
+        <el-row type="flex" justify="space-start">
+          <el-col :span="3" class="room-filter">
+            <el-input v-model="roomfilter.roomname" placeholder="过滤房间号" size="mini" />
+          </el-col>
+          <el-col :span="3" class="room-filter">
+            <el-input v-model="roomfilter.roomdec" placeholder="过滤租户名称" size="mini" />
+          </el-col>
+          <el-col :span="2" class="room-filter">
+            <el-input v-model="roomfilter.roomdec" placeholder="过滤电表号" size="mini" />
+          </el-col>
+          <el-col :span="11" class="room-filter">
+            <el-date-picker
+              v-model="selDateRang"
+              size="mini"
+              type="monthrange"
+              align="right"
+              unlink-panels
+              range-separator="至"
+              start-placeholder="开始月份"
+              end-placeholder="结束月份"
+              :picker-options="pickerOptions"
+              @change="onPickTimeRange"
+            />
+            <el-button type="primary" icon="el-icon-search" size="mini" @click="loadRoom">查询</el-button>
+          </el-col>
 
-                  <el-form-item>
-                    <el-button type="primary">提交</el-button>
-                    <el-button>取消</el-button>
-                  </el-form-item>
-                </el-form>
-              </div>
+          <el-col :span="5" class="room-exportcol">
+            <el-button icon="el-icon-search" size="mini" @click="loadRoom">导出Excel...</el-button>
+          </el-col>
 
-            </el-tab-pane>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <div class="room-row-gap" />
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-start">
+          <el-col :span="24" class="room-filter">
+            <el-table
+              :data="meterFeeList"
+              element-loading-text="加载收费数据中..."
+              border
+              fit
+              max-height="550"
+              highlight-current-row
+              :row-style="{height:'16px'}"
+              :cell-style="{padding:'0px'}"
+              :header-cell-style="{background:'#eef1f6',color:'#606266'}"
 
-            <el-tab-pane label="修改密码" name="second">
+              @row-click="handleRoomChange"
+            >
+              <el-table-column align="center" label="序号" width="60">
+                <template slot-scope="scope">
+                  {{ scope.$index+1 }}
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="流水号" width="130">
+                <template slot-scope="scope">
+                  {{ get_meterfee_sn(scope.row.meter_id,scope.row.time_start) }}
+                </template>
+              </el-table-column>
 
-              <div style="width: 400px">
-                <el-form
-                  ref="passForm"
-                  :model="passForm"
-                  status-icon
-                  :rules="rules"
-                  label-width="100px"
-                  class="demo-ruleForm"
-                >
-                  <el-form-item label="原密码" prop="oldPass">
-                    <el-input v-model="passForm.oldPass" type="password" autocomplete="off" />
-                  </el-form-item>
-                  <el-form-item label="密码" prop="newPass">
-                    <el-input v-model="passForm.newPass" type="password" autocomplete="off" />
-                  </el-form-item>
-                  <el-form-item label="确认密码" prop="checkPass">
-                    <el-input v-model="passForm.checkPass" type="password" autocomplete="off" />
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button type="primary" @click="updatePass('passForm')">修改</el-button>
-                    <el-button @click="resetForm('passForm')">重置</el-button>
-                  </el-form-item>
-                </el-form>
-              </div>
+              <el-table-column align="center" label="房间编号" width="90">
+                <template slot-scope="scope">
+                  {{ scope.row.room_name }}
+                </template>
+              </el-table-column>
+              <el-table-column label="租户" width="125">
+                <template slot-scope="scope">
+                  {{ scope.row.tenant_name }}
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="起止日期" width="90">
+                <template slot-scope="scope">
+                  {{ datescope_2_str(scope.row.time_start,scope.row.time_end) }}
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="电费(元)" width="110">
+                <template slot-scope="scope">
+                  {{ scope.row.ep_start.toFixed(1) }}度
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="水费(元)" width="110">
+                <template slot-scope="scope">
+                  {{ scope.row.ep_end.toFixed(1) }}度
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="租金(度)" width="110">
+                <template slot-scope="scope">
+                  {{ scope.row.ep_used.toFixed(1) }}度
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="管理费(元)" width="120">
+                <template slot-scope="scope">
+                  ￥{{ scope.row.ep_price.toFixed(1) }}
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="其他(元)" width="120">
+                <template slot-scope="scope">
+                  ￥{{ scope.row.total_fee.toFixed(1) }}元
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="合计(元)" width="120">
+                <template slot-scope="scope">
+                  ￥{{ scope.row.total_fee.toFixed(1) }}元
+                </template>
+              </el-table-column>
 
-            </el-tab-pane>
-            <el-tab-pane label="修改邮箱" name="third">
+              <el-table-column label="状态" width="100" align="center">
+                <template slot-scope="scope">
+                  <span v-if="scope.row.fee_status === 1 " style="color:#555555">
+                    已缴费
+                  </span>
+                  <span v-if="scope.row.fee_status === 0 " style="color:#555555">
+                    未缴费
+                  </span>
 
-              <div style="width: 500px">
-                <el-form ref="mailForm" :model="mailForm" label-width="100px" class="demo-ruleForm">
-                  <el-form-item
-                    prop="email"
-                    label="邮箱"
-                    :rules="[{ required: true, message: '请输入邮箱地址', trigger: 'blur' },
-                             { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }]"
-                  >
-                    <el-input v-model="mailForm.email" style="width: 250px;" />
-                    <el-button :loading="codeLoading" :disabled="isDisabled" @click="sendCode">{{ buttonName }}
-                    </el-button>
-                  </el-form-item>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" prop="managefee" width="180" align="center">
+                <template slot-scope="scope">
+                  <el-link type="primary" icon="el-icon-info" @click="handleDelete(scope.$index,scope.row)">详情</el-link>
+                  <el-link type="danger" icon="el-icon-delete" @click="handleDelete(scope.$index,scope.row)">删除</el-link>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-col>
+        </el-row>
 
-                  <el-form-item
-                    label="验证码"
-                    prop="code"
-                    :rules="[{ required: true, message: '验证码不能为空'}]"
-                  >
-                    <el-input v-model="mailForm.code" type="age" autocomplete="off" />
-                  </el-form-item>
-                  <el-form-item
-                    label="密码"
-                    prop="pass"
-                    :rules="[{ required: true, message: '密码不能为空'}]"
-                  >
-                    <el-input v-model="mailForm.pass" type="age" autocomplete="off" />
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button type="primary" @click="updateEmail('mailForm')">提交</el-button>
-                    <el-button @click="resetForm('mailForm')">重置</el-button>
-                  </el-form-item>
-                </el-form>
-              </div>
-            </el-tab-pane>
-          </el-tabs>
-        </el-card>
       </el-col>
     </el-row>
 
@@ -149,70 +139,55 @@
 </template>
 
 <script>
+
+import QRCode from 'qrcodejs2'
+import { billdayscope2str, sqlstr_2_timestamp, PrefixInteger, GetServerURL, uuidGenerator, timestam_2_str, timestam_2_shortstr, conversqltimestr_2_time } from '@/api/common'
+import { getwxuserinfobyuuid } from '@/api/user'
+import { Message } from 'element-ui'
 import PanThumb from '@/components/PanThumb'
-import { getUserInfo, updatePass, resetEmail, updateEmail } from '@/api/user'
+import { getUserInfo, updatePass, resetEmail } from '@/api/user'
+import { isvalidFP } from '@/utils/validate'
+import { Loading } from 'element-ui'
+let loading
 
 export default {
-  name: 'Index',
+  name: 'Roomfee',
   components: { PanThumb },
   data() {
-    const validatePass = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('请输入密码'))
-      } else {
-        if (this.passForm.checkPass !== '') {
-          this.$refs.passForm.validateField('checkPass')
-        }
-        callback()
-      }
-    }
-    const validatePass2 = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('请再次输入密码'))
-      } else if (value !== this.passForm.newPass) {
-        callback(new Error('两次输入密码不一致!'))
-      } else {
-        callback()
-      }
-    }
     return {
-      user: {
-        avatar: '',
-        username: '',
-        phone: 0,
-        email: '',
-        deptName: '',
-        jobName: '',
-        createTime: ''
+
+      selDateRang: [new Date(), new Date()],
+      meterFeeList: null,
+      roomfilter: { // 费单过滤器
+        areaid: 10,
+        roomname: '',
+        roomdec: ''
       },
-      activeName: 'first',
-      passForm: {
-        oldPass: '',
-        newPass: '',
-        checkPass: ''
+      pickerOptions: {
+        shortcuts: [{
+          text: '本月',
+          onClick(picker) {
+            picker.$emit('pick', [new Date(), new Date()])
+          }
+        }, {
+          text: '今年至今',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date(new Date().getFullYear(), 0)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近六个月',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setMonth(start.getMonth() - 6)
+            picker.$emit('pick', [start, end])
+          }
+        }]
       },
-      rules: {
-        oldPass: [{ required: true, message: '原密码不能为空', trigger: 'blur' }],
-        newPass: [{ validator: validatePass, trigger: 'blur' }],
-        checkPass: [{ validator: validatePass2, trigger: 'blur' }]
-      },
-      mailForm: {
-        email: '',
-        code: '',
-        pass: ''
-      },
-      buttonName: '发送验证码',
-      isDisabled: false,
-      codeLoading: false,
-      time: 60,
-      logo: [
-        { img: 'gitee.png', name: 'gitee', bind: false, radius: true },
-        { img: 'github.png', name: 'github', bind: false, radius: true },
-        { img: 'tencent_cloud.png', name: 'tencent_cloud', bind: false, radius: true },
-        { img: 'qq.png', name: 'qq', bind: false, radius: false },
-        { img: 'dingtalk.png', name: 'dingtalk', bind: false, radius: true },
-        { img: 'microsoft.png', name: 'microsoft', bind: false, radius: false }
-      ]
+      value2: ''
+
     }
   },
   computed: {
@@ -221,203 +196,95 @@ export default {
     }
   },
   created() {
-    this.findUserInfo()
+    // 初始化时间选择范围
+    var now = new Date()
+    var lastMonth = new Date()
+    lastMonth.setMonth(lastMonth.getMonth() - 4)
+    var startDate = new Date(Date.UTC(lastMonth.getFullYear(), lastMonth.getMonth(), lastMonth.getDate())).toISOString().slice(0, 10)
+    var endDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).toISOString().slice(0, 10)
+    this.selDateRang = []
+    this.selDateRang.push(startDate)
+    this.selDateRang.push(endDate)
+  },
+  mounted() {
+
   },
 
   methods: {
-    // parseTime,
-    // formatEmail(mail) {
-    //   return regEmail(mail)
-    // },
 
-    resolveLogo(logo) {
-      return require(`@/assets/logo/${logo}`)
-    },
-    // 加载用户个人信息
-    findUserInfo: function() {
-      getUserInfo().then((res) => {
-        this.user = res.data.data
-      })
+    meterid_2_str(meterid) {
+      return PrefixInteger(meterid, 6)
     },
 
-    // 修改密码
-    updatePass: function(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          const params = new URLSearchParams()
-          params.append('oldPass', this.passForm.oldPass)
-          params.append('newPass', this.passForm.newPass)
-          updatePass(params).then((res) => {
-            if (res.data.code === 200) {
-              this.$message({
-                type: 'success',
-                message: '操作成功'
-              })
-              this.activeName = 'second'
-              this.$refs['passForm'].resetFields()
-            } else {
-              this.$message({
-                type: 'error',
-                message: res.data.msg
-              })
-            }
-          })
-        } else {
-          return false
-        }
-      })
-    },
-    // 修改邮箱
-    updateEmail: function(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          const params = new URLSearchParams()
-          params.append('mail', this.mailForm.email)
-          params.append('code', this.mailForm.code)
-          params.append('pass', this.mailForm.pass)
-          updateEmail(params).then((res) => {
-            if (res.data.code === 200) {
-              this.$message({
-                type: 'success',
-                message: '操作成功'
-              })
-              this.activeName = 'third'
-              this.$refs['mailForm'].resetFields()
-            } else {
-              this.$message({
-                type: 'error',
-                message: res.data.msg
-              })
-            }
-          })
-        } else {
-          return false
-        }
-      })
-    },
+    // 起止日期字符串
+    datescope_2_str(startTmStr, endTmStr) {
+      var startTm = sqlstr_2_timestamp(startTmStr)
+      var endTm = sqlstr_2_timestamp(endTmStr)
 
-    // 发送邮箱验证码
-    sendCode() {
-      if (this.mailForm.email && this.mailForm.email !== '') {
-        this.codeLoading = true
-        this.buttonName = '验证码发送中'
-        const params = new URLSearchParams()
-        params.append('to', this.mailForm.email)
-        const _this = this
-        resetEmail(params).then(res => {
-          if (res.data.code === 200) {
-            this.$message({
-              showClose: true,
-              message: '发送成功，验证码有效期5分钟',
-              type: 'success'
-            })
-            this.codeLoading = false
-            this.isDisabled = true
-            this.buttonName = this.time-- + '秒后重新发送'
-            this.timer = window.setInterval(function() {
-              _this.buttonName = _this.time + '秒后重新发送'
-              --_this.time
-              if (_this.time < 0) {
-                _this.buttonName = '重新发送'
-                _this.time = 60
-                _this.isDisabled = false
-                window.clearInterval(_this.timer)
-              }
-            }, 1000)
-          }
-        }).catch(err => {
-          this.resetForm()
-          this.codeLoading = false
-          console.log(err.data.message)
-        })
+      var str = billdayscope2str(startTm, endTm)
+
+      return str
+    },
+    // 获取流水号，将起始时间转换成整数
+    get_meterfee_sn(meterid, datetimestr) {
+      if (datetimestr == null) {
+        return ''
       }
+
+      var startTm = sqlstr_2_timestamp(datetimestr)
+
+      return PrefixInteger(meterid, 6) + PrefixInteger(startTm.getFullYear(), 2) + PrefixInteger(startTm.getMonth(), 2) + PrefixInteger(startTm.getDate(), 2)
     },
-    // handleSuccess(response, file, fileList) {
-    //   this.$notify({
-    //     title: '头像修改成功',
-    //     type: 'success',
-    //     duration: 2500
-    //   })
-    //   store.dispatch('GetInfo').then(() => {
-    //   })
-    // },
-    // 监听上传失败
-    // handleError(e, file, fileList) {
-    //   const msg = JSON.parse(e.message)
-    //   this.$notify({
-    //     title: msg.message,
-    //     type: 'error',
-    //     duration: 2500
-    //   })
-    // },
-    refresh() {
-      this.ico = 'el-icon-loading'
-      this.$refs.log.init()
-      setTimeout(() => {
-        this.ico = 'el-icon-refresh'
-      }, 300)
+    queryMeterFee(queryParam) {
+
     },
-    submitForm(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          alert('submit!')
-        } else {
-          console.log('error submit!!')
-          return false
-        }
+    onPickTimeRange() {
+      var _this = this
+      var date1 = timestam_2_str(this.selDateRang[0])
+      var date2 = timestam_2_str(this.selDateRang[1])
+
+      var areaid = _this.$store.state.area.currentarea.area_id
+
+      var queryParam = { area_id: areaid, room_id: 0, meter_id: 0, room_tenant_id: '', start_time: date1, end_time: date2 }
+
+      _this.$store.dispatch('GetMeterFee', queryParam).then((meterfees) => {
+        _this.meterFeeList = meterfees
+      }).catch((ex) => {
+        var kk = 0
       })
-    },
-    resetForm(formName) {
-      if (this.$refs[formName] !== undefined) {
-        this.$refs[formName].resetFields()
-      }
-    },
-    handleClick(tab, event) {
-      console.log(tab, event)
-    },
-
-    // handleAvatarSuccess(res, file) {
-    //   // this.imageUrl = URL.createObjectURL(file.raw)
-    //   const data = new FormData()
-    //   data.append('token', '')
-    //   data.append('file', file[0])
-    //   axiosInstance({
-    //     method: 'POST',
-    //     url: 'http://up.qiniu.com',
-    //     data: data
-    //   })
-    //     .then(function(res) {
-    //       // console.log('res',res)
-    //       const { base_url, path } = res.data
-    //       // 页面所用字段
-    //       self.previewAvatar = `${base_url}${path}?imageView2/1/w/154/h/154`
-    //       // 传给后台不完整
-    //       self.formData.avatar = `${path}`
-    //     })
-    //     .catch(function(err) {
-    //       console.log('err', err)
-    //     })
-    // },
-    beforeAvatarUpload(file) {
-      const isJPG = file.type === 'image/jpeg'
-      const isLt2M = file.size / 1024 / 1024 < 2
-
-      if (!isJPG) {
-        this.$message.error('上传头像图片只能是 JPG 格式!')
-      }
-      if (!isLt2M) {
-        this.$message.error('上传头像图片大小不能超过 2MB!')
-      }
-      return isJPG && isLt2M
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+  .room-filter{
+  margin-left: 5px;
+  }
+  .room-exportcol{
+  text-align: right;
+  }
+
+  .col-align-right
+  {
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: row;
+    align-items:center;
+    width:100%;
+
+  }
+
+  .room-row-gap
+    {
+      display: flex;
+      height: 15px;
+      width:100%;
+
+    }
 
   .user-center{
-    height: 440px;
+    height: 100%;
   }
   .box-center {
     margin: 0 auto;
@@ -489,7 +356,7 @@ export default {
       .user-bio-section-header {
         border-bottom: 1px solid #dfe6ec;
         padding-bottom: 10px;
-        margin-bottom: 10px; 
+        margin-bottom: 10px;
         font-weight: bold;
       }
     }

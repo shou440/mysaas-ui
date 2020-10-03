@@ -289,7 +289,6 @@ export default {
     }
   },
   created() {
-    debugger
     this.refreshCaptcha()
     this.socialLogin()
   },
@@ -410,9 +409,8 @@ export default {
     handleSocial(path) {
       this.currentPath = path
       this.socialLoading = true
-      //window.location.href = 'http://localhost:8081/auth/' + path
+      // window.location.href = 'http://localhost:8081/auth/' + path
       window.location.href = 'http://211.149.169.214:8081/auth/' + path
-  
     },
     gotoRegister() {
       this.$router.push({

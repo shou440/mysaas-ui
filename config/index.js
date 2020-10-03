@@ -6,10 +6,11 @@ module.exports = {
   dev: {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {
+    proxyTable: { 
       '/pre': { 
         target: 'http://localhost:8081',//后端接口地址
-      //  target: 'http://211.149.169.214:8081',//后端接口地址
+      //  target: 'http://134.175.52.44:8081',//后端接口地址
+        //target: 'http://134.175.52.44:8081',//后端接口地址
         changeOrigin: true,  //是否跨域
         pathRewrite: {
           '^/pre': '/',//重写,
@@ -36,8 +37,7 @@ module.exports = {
     index: path.resolve(__dirname, '../dist/index.html'),
     assetsRoot: path.resolve(__dirname, '../dist'),
     assetsSubDirectory: 'static',
-    assetsPublicPath: '/',
-
+    assetsPublicPath: '/mysaasui/',
     productionSourceMap: false,
     devtool: 'source-map',
     productionGzip: false,
